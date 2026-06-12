@@ -1,0 +1,13 @@
+.DS_Store
+.build/
+.superpowers/
+DerivedData/
+*.xcuserdata/
+*.swp
+*.tmp
+
+# Runtime state and local logs
+state.json
+preferences.json
+hook-mxp.log
+quota-mxp.log

@@ -128,7 +128,7 @@ do {
             workspace: ContextResolver.workspace(explicitWorkspace: options.workspace),
             source: "cli",
             hookEventName: nil,
-            message: "Codex traffic light: quit"
+            message: "Cloud Code light: quit"
         )
         try printSnapshot(snapshot, json: options.json)
     default:
@@ -141,7 +141,7 @@ do {
             workspace: workspace,
             source: "cli",
             hookEventName: nil,
-            message: "Codex traffic light: \(state.rawValue)"
+            message: "Cloud Code light: \(state.rawValue)"
         )
         try printSnapshot(snapshot, json: options.json)
     }

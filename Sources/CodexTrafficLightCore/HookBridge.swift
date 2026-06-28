@@ -61,7 +61,7 @@ public enum HookBridge {
         }
 
         let state = HookMapper.state(for: event)
-        let message = event.lastAssistantMessage ?? "Codex traffic light: \(state.rawValue)"
+        let message = event.lastAssistantMessage ?? "Cloud Code light: \(state.rawValue)"
         snapshot = try store.updateTask(
             taskID: taskID,
             state: state,

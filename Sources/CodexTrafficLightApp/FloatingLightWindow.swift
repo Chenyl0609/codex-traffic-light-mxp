@@ -6,6 +6,8 @@ final class FloatingLightWindow {
     let window: NSWindow
     let view: TrafficLightView
 
+    var onDismiss: (() -> Void)?
+
     init() {
         let layout = TrafficLightLayout.default
         let size = NSSize(width: layout.windowSize.x, height: layout.windowSize.y)
@@ -30,8 +32,11 @@ final class FloatingLightWindow {
             frame.origin.y += delta.y
             window.setFrameOrigin(frame.origin)
         }
-        view.onToggleVisibility = { [weak window] in
-            window?.orderOut(nil)
+        view.onToggleVisibility = { [weak self] in
+            self?.onDismiss?()
+        }
+        view.onDismiss = { [weak self] in
+            self?.onDismiss?()
         }
     }
 
@@ -45,6 +50,10 @@ final class FloatingLightWindow {
 
     func hide() {
         window.orderOut(nil)
+    }
+
+    func show() {
+        window.makeKeyAndOrderFront(nil)
     }
 
     func toggle() {

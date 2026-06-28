@@ -35,7 +35,6 @@ final class StatusBarController {
     private func rebuildMenu() {
         let menu = NSMenu()
         menu.addItem(withTitle: "当前：\(state.label)", action: nil, keyEquivalent: "")
-        menu.addItem(withTitle: "额度：\(quotaText(for: quota))", action: nil, keyEquivalent: "")
         menu.addItem(.separator())
         menu.addItem(withTitle: "显示/隐藏红绿灯", action: #selector(toggleFloatingWindow), keyEquivalent: "")
         menu.addItem(withTitle: muted ? "恢复提示音" : "静音提示音", action: #selector(toggleMute), keyEquivalent: "")
@@ -54,9 +53,7 @@ final class StatusBarController {
     }
 
     private func tooltipText(state: LightState, quota: QuotaSnapshot?) -> String {
-        let base = "Codex 红绿灯：\(state.label)"
-        guard let quota else { return base }
-        return "\(base) · \(quotaText(for: quota))"
+        "Cloud Code 红绿灯：\(state.label)"
     }
 
     private func quotaText(for quota: QuotaSnapshot?) -> String {

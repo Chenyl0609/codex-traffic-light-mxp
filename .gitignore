@@ -11,3 +11,5 @@ state.json
 preferences.json
 hook-mxp.log
 quota-mxp.log
+*.app/
+.claude/

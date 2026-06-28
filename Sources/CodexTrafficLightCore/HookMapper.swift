@@ -93,9 +93,7 @@ public enum HookMapper {
             "你.{0,20}(确认|选择|提供|发我|补充)",
             "要不要|可以吗|行不行|是否",
             "我需要.{0,20}(你|确认|授权|文件|截图|验证码)",
-            "blocked|waiting for user|permission|approval",
-            "\\?",
-            "？"
+            "blocked|waiting for user|permission|approval"
         ]
 
         return patterns.contains { pattern in

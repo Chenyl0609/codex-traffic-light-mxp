@@ -16,12 +16,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, StatusBarControllerDel
     private var waitingBlinkStopTimer: Timer?
     private var idleTimer: Timer?
     private var quotaTimer: Timer?
+    private var vsCodeCheckTimer: Timer?
     private let quotaRefreshCoordinator = QuotaRefreshCoordinator()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         preferences = preferencesStore.read()
         soundController = SoundController(muted: preferences.muted)
         statusBar.delegate = self
+        floatingWindow.onDismiss = { [weak self] in
+            self?.dismissAlert()
+        }
 
         let snapshot = store.read()
         currentQuota = snapshot.quota
@@ -32,6 +36,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, StatusBarControllerDel
         blinkTimer = Timer.scheduledTimer(timeInterval: 0.52, target: self, selector: #selector(blinkTimerFired), userInfo: nil, repeats: true)
         Timer.scheduledTimer(timeInterval: 1.5, target: self, selector: #selector(quotaTimerFired), userInfo: nil, repeats: false)
         quotaTimer = Timer.scheduledTimer(timeInterval: Defaults.appServerQuotaRefreshSeconds, target: self, selector: #selector(quotaTimerFired), userInfo: nil, repeats: true)
+        vsCodeCheckTimer = Timer.scheduledTimer(timeInterval: 2, target: self, selector: #selector(vsCodeCheckFired), userInfo: nil, repeats: true)
     }
 
     private enum StateSource {
@@ -47,6 +52,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, StatusBarControllerDel
 
     @objc private func quotaTimerFired() {
         refreshQuotaFromAppServer()
+    }
+
+    @objc private func vsCodeCheckFired() {
+        guard currentState != .idle && currentState != .quit else { return }
+        guard !floatingWindow.window.isVisible else { return }
+        if isVSCodeFrontmost() { return }
+        floatingWindow.show()
+    }
+
+    private func isVSCodeFrontmost() -> Bool {
+        NSWorkspace.shared.frontmostApplication?.bundleIdentifier == "com.microsoft.VSCode"
     }
 
     private func refreshQuotaFromAppServer() {
@@ -146,11 +162,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, StatusBarControllerDel
     private func shouldShowFloatingWindow(for state: LightState, source: StateSource) -> Bool {
         if source == .user { return preferences.showFloatingWindow }
         switch state {
-        case .waiting:
-            return preferences.autoShowOnWaiting
-        case .done:
-            return preferences.autoShowOnDone
-        case .working, .idle, .quit:
+        case .waiting, .working, .done:
+            return true
+        case .idle, .quit:
             return floatingWindow.window.isVisible && preferences.showFloatingWindow
         }
     }
@@ -203,7 +217,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, StatusBarControllerDel
             workspace: FileManager.default.currentDirectoryPath,
             source: "menu",
             hookEventName: nil,
-            message: "Codex traffic light: \(state.rawValue)"
+            message: "Cloud Code light: \(state.rawValue)"
         )
         let snapshot = store.read()
         currentQuota = snapshot.quota
@@ -230,6 +244,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, StatusBarControllerDel
 
     func statusBarDidRequestQuit() {
         terminate()
+    }
+
+    private func dismissAlert() {
+        soundController.stopAll()
+        stopWaitingBlink()
+        floatingWindow.hide()
+        openVSCode()
+    }
+
+    private func openVSCode() {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/open")
+        process.arguments = ["-a", "Visual Studio Code"]
+        try? process.run()
     }
 
     private func terminate() {

@@ -66,4 +66,4 @@
 | `README.md` | 修改 | 全文更新为 Cloud Code Light 文档 |
 | `Docs/hooks-claude-code.example.json` | 新增 | Claude Code hooks 配置示例 |
 | `create-app-bundle.sh` | 新增 | .app 打包脚本 |
-| `install.command` | 新增 | 一键安装脚本 |
+| `install.command` | 新增 | 一键安装脚本 | 

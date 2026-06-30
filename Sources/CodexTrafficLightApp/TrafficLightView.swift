@@ -19,11 +19,27 @@ final class TrafficLightView: NSView {
     var onDrag: ((NSPoint) -> Void)?
     var onToggleVisibility: (() -> Void)?
     var onDismiss: (() -> Void)?
+    var onSilence: (() -> Void)?
 
     private var dragStart: NSPoint?
     private var singleClickTimer: Timer?
 
     override var acceptsFirstResponder: Bool { true }
+
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        trackingAreas.forEach { removeTrackingArea($0) }
+        addTrackingArea(NSTrackingArea(
+            rect: bounds,
+            options: [.mouseEnteredAndExited, .activeAlways],
+            owner: self,
+            userInfo: nil
+        ))
+    }
+
+    override func mouseEntered(with event: NSEvent) {
+        onSilence?()
+    }
 
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)

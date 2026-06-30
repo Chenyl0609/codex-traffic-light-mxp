@@ -38,15 +38,31 @@ public enum HookBridge {
         let quotaOnly = HookMapper.isQuotaOnlyEvent(event.name)
         let workspace = ContextResolver.workspace(explicitWorkspace: nil, hookEvent: event)
         let taskID = ContextResolver.taskID(explicitTaskID: nil, workspace: workspace, hookEvent: event)
-        var snapshot = store.read()
+
+        let workspaceStore: StateStore
+        if !workspace.isEmpty {
+            workspaceStore = StateStore(stateURL: StateStore.workspaceStateURL(workspace: workspace))
+        } else {
+            workspaceStore = store
+        }
+
+        var snapshot = workspaceStore.read()
 
         if let quota {
-            snapshot = try store.updateQuota(
+            snapshot = try workspaceStore.updateQuota(
                 fiveHourPercent: quota.fiveHourRemainingPercent,
                 weeklyPercent: quota.weeklyRemainingPercent,
                 source: "codex-hook",
                 now: now
             )
+            if workspaceStore.stateURL != store.stateURL {
+                _ = try? store.updateQuota(
+                    fiveHourPercent: quota.fiveHourRemainingPercent,
+                    weeklyPercent: quota.weeklyRemainingPercent,
+                    source: "codex-hook",
+                    now: now
+                )
+            }
         }
 
         if quotaOnly {
@@ -62,7 +78,7 @@ public enum HookBridge {
 
         let state = HookMapper.state(for: event)
         let message = event.lastAssistantMessage ?? "Cloud Code light: \(state.rawValue)"
-        snapshot = try store.updateTask(
+        snapshot = try workspaceStore.updateTask(
             taskID: taskID,
             state: state,
             workspace: workspace,
@@ -71,6 +87,18 @@ public enum HookBridge {
             message: message,
             now: now
         )
+
+        if workspaceStore.stateURL != store.stateURL {
+            _ = try? store.updateTask(
+                taskID: taskID,
+                state: state,
+                workspace: workspace,
+                source: "codex-hook",
+                hookEventName: event.name,
+                message: message,
+                now: now
+            )
+        }
 
         return HookBridgeResult(
             eventName: event.name,

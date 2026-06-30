@@ -11,12 +11,16 @@ INSTALL_DIR="$HOME/Applications"
 echo "Building release..."
 "$DIR/build.command"
 
+echo "Generating app icon..."
+python3 "$DIR/create-icon.py"
+
 echo "Creating .app bundle..."
 rm -rf "$APP_BUNDLE"
 mkdir -p "$APP_BUNDLE/Contents/MacOS"
 mkdir -p "$APP_BUNDLE/Contents/Resources"
 
 cp "$DIR/.build/release/CodexTrafficLightApp" "$APP_BUNDLE/Contents/MacOS/$APP_NAME"
+cp "$DIR/AppIcon.icns" "$APP_BUNDLE/Contents/Resources/AppIcon.icns"
 
 cat > "$APP_BUNDLE/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
@@ -37,6 +41,8 @@ cat > "$APP_BUNDLE/Contents/Info.plist" <<'PLIST'
     <string>APPL</string>
     <key>CFBundleExecutable</key>
     <string>CloudCodeLight</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
     <key>LSMinimumSystemVersion</key>
     <string>13.0</string>
     <key>LSUIElement</key>

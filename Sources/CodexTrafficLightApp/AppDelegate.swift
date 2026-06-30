@@ -26,6 +26,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, StatusBarControllerDel
         floatingWindow.onDismiss = { [weak self] in
             self?.dismissAlert()
         }
+        floatingWindow.onSilence = { [weak self] in
+            self?.silenceAlert()
+        }
 
         let snapshot = store.read()
         currentQuota = snapshot.quota
@@ -37,6 +40,35 @@ final class AppDelegate: NSObject, NSApplicationDelegate, StatusBarControllerDel
         Timer.scheduledTimer(timeInterval: 1.5, target: self, selector: #selector(quotaTimerFired), userInfo: nil, repeats: false)
         quotaTimer = Timer.scheduledTimer(timeInterval: Defaults.appServerQuotaRefreshSeconds, target: self, selector: #selector(quotaTimerFired), userInfo: nil, repeats: true)
         vsCodeCheckTimer = Timer.scheduledTimer(timeInterval: 2, target: self, selector: #selector(vsCodeCheckFired), userInfo: nil, repeats: true)
+
+        NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard event.modifierFlags.contains(.control),
+                  event.modifierFlags.contains(.option),
+                  event.modifierFlags.contains(.command),
+                  event.charactersIgnoringModifiers == "l" else { return }
+            DispatchQueue.main.async { [weak self] in
+                self?.floatingWindow.toggle()
+            }
+        }
+
+        checkHooksConfiguration()
+    }
+
+    private func checkHooksConfiguration() {
+        let settingsURL = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent(".claude/settings.json")
+        guard let data = try? Data(contentsOf: settingsURL),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let hooks = json["hooks"] as? [String: Any],
+              !hooks.isEmpty else {
+            let alert = NSAlert()
+            alert.messageText = "Claude Code Hooks 未配置"
+            alert.informativeText = "Cloud Code Light 需要 Claude Code 的 Hooks 才能自动检测状态。\n\n请运行 install.command 或手动将 Docs/hooks-claude-code.example.json 中的配置合并到 ~/.claude/settings.json"
+            alert.alertStyle = .warning
+            alert.addButton(withTitle: "好的")
+            alert.runModal()
+            return
+        }
     }
 
     private enum StateSource {
@@ -246,11 +278,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate, StatusBarControllerDel
         terminate()
     }
 
+    func statusBarDidRequestAbout() {
+        let alert = NSAlert()
+        alert.messageText = "Cloud Code Light"
+        alert.informativeText = "版本 1.0\n专为 Claude Code + VS Code 打造的 macOS 状态灯\n\nGitHub: github.com/Chenyl0609/codex-traffic-light-mxp"
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: "好的")
+        alert.runModal()
+    }
+
     private func dismissAlert() {
         soundController.stopAll()
         stopWaitingBlink()
         floatingWindow.hide()
         openVSCode()
+    }
+
+    private func silenceAlert() {
+        soundController.stopAll()
+        stopWaitingBlink()
     }
 
     private func openVSCode() {

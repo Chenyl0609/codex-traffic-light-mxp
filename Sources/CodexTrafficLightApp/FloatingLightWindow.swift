@@ -7,6 +7,7 @@ final class FloatingLightWindow {
     let view: TrafficLightView
 
     var onDismiss: (() -> Void)?
+    var onSilence: (() -> Void)?
 
     init() {
         let layout = TrafficLightLayout.default
@@ -37,6 +38,9 @@ final class FloatingLightWindow {
         }
         view.onDismiss = { [weak self] in
             self?.onDismiss?()
+        }
+        view.onSilence = { [weak self] in
+            self?.onSilence?()
         }
     }
 

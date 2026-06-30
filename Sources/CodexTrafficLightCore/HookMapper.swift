@@ -86,18 +86,22 @@ public enum HookMapper {
         guard let message, !message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             return false
         }
+        let lower = message.lowercased()
         let patterns = [
             "等你",
-            "需要.{0,20}(回复|确认|授权|登录|验证码|文件|截图|选择|提供|补充)",
-            "请.{0,20}(回复|确认|授权|登录|提供|发我|补充|选择)",
-            "你.{0,20}(确认|选择|提供|发我|补充)",
-            "要不要|可以吗|行不行|是否",
-            "我需要.{0,20}(你|确认|授权|文件|截图|验证码)",
+            "我需要你",
+            "我需要.{0,10}(确认|授权|文件|截图|验证码)",
+            "要不要",
+            "可以吗",
+            "行不行",
+            "是否需要",
+            "是否要",
+            "请你(回复|确认一下|授权|登录|发给我|补充一下|选一下)",
             "blocked|waiting for user|permission|approval"
         ]
 
         return patterns.contains { pattern in
-            message.range(of: pattern, options: [.regularExpression, .caseInsensitive]) != nil
+            lower.range(of: pattern, options: [.regularExpression]) != nil
         }
     }
 }

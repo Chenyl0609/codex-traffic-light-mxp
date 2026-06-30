@@ -8,6 +8,7 @@ protocol StatusBarControllerDelegate: AnyObject {
     func statusBarDidRequestToggleFloatingWindow()
     func statusBarDidRequestToggleMute()
     func statusBarDidRequestQuit()
+    func statusBarDidRequestAbout()
 }
 
 @MainActor
@@ -36,7 +37,9 @@ final class StatusBarController {
         let menu = NSMenu()
         menu.addItem(withTitle: "当前：\(state.label)", action: nil, keyEquivalent: "")
         menu.addItem(.separator())
-        menu.addItem(withTitle: "显示/隐藏红绿灯", action: #selector(toggleFloatingWindow), keyEquivalent: "")
+        let toggleItem = NSMenuItem(title: "显示/隐藏红绿灯", action: #selector(toggleFloatingWindow), keyEquivalent: "l")
+        toggleItem.keyEquivalentModifierMask = [.control, .option, .command]
+        menu.addItem(toggleItem)
         menu.addItem(withTitle: muted ? "恢复提示音" : "静音提示音", action: #selector(toggleMute), keyEquivalent: "")
         menu.addItem(.separator())
         menu.addItem(withTitle: "黄灯：正在干活", action: #selector(setWorking), keyEquivalent: "")
@@ -46,6 +49,8 @@ final class StatusBarController {
         menu.addItem(withTitle: "清空失联任务", action: #selector(clear), keyEquivalent: "")
         menu.addItem(.separator())
         menu.addItem(withTitle: "退出", action: #selector(quit), keyEquivalent: "")
+        menu.addItem(.separator())
+        menu.addItem(withTitle: "关于 Cloud Code Light", action: #selector(about), keyEquivalent: "")
         for item in menu.items {
             item.target = self
         }
@@ -68,6 +73,7 @@ final class StatusBarController {
     @objc private func clear() { delegate?.statusBarDidRequestClear() }
     @objc private func toggleFloatingWindow() { delegate?.statusBarDidRequestToggleFloatingWindow() }
     @objc private func toggleMute() { delegate?.statusBarDidRequestToggleMute() }
+    @objc private func about() { delegate?.statusBarDidRequestAbout() }
     @objc private func quit() { delegate?.statusBarDidRequestQuit() }
 
     private func makeStatusImage(state: LightState) -> NSImage {

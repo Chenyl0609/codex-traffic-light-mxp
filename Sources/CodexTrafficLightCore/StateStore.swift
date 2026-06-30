@@ -30,6 +30,24 @@ public final class StateStore {
         return defaultSupportDirectory().appendingPathComponent("state.json")
     }
 
+    public static func workspaceStateURL(workspace: String) -> URL {
+        let hash = workspace.data(using: .utf8).map { $0.map { String(format: "%02x", $0) }.joined() } ?? "default"
+        let prefix = String(hash.prefix(12))
+        let slug = workspace.components(separatedBy: "/").last ?? "default"
+        let filename = "\(prefix)_\(slug).json"
+        return defaultSupportDirectory().appendingPathComponent(filename)
+    }
+
+    public static func allWorkspaceStateURLs() -> [URL] {
+        let dir = defaultSupportDirectory()
+        guard let files = try? FileManager.default.contentsOfDirectory(
+            at: dir,
+            includingPropertiesForKeys: nil,
+            options: [.skipsHiddenFiles]
+        ) else { return [] }
+        return files.filter { $0.lastPathComponent.hasSuffix(".json") && $0.lastPathComponent != "state.json" }
+    }
+
     public func read() -> StateSnapshot {
         guard let data = try? Data(contentsOf: stateURL) else {
             return .empty()
